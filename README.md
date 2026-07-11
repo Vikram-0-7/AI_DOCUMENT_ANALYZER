@@ -79,6 +79,39 @@ graph TD
 
 ---
 
+## 🛠️ Tech Stack
+
+### Frontend
+- **React 18** (Vite 5)
+- **Lucide React** for UI icons
+- **Canvas-Confetti** for quiz completion animations
+- **Vanilla CSS 3** with custom glassmorphic variables
+
+### Backend
+- **FastAPI** with async support
+- **SQLAlchemy 2** for database ORM access
+- **ChromaDB** for vector indexing
+- **Rank-BM25** for sparse keyword search
+- **Sentence-Transformers** (`BAAI/bge-base-en-v1.5`) for local embeddings
+- **Groq SDK** for Llama 3.3 LLM inference
+- **Celery** + **Redis** (with FastAPI BackgroundTasks fallback) for ingestion queues
+- **PyPDF** + **python-docx** for document parsers
+
+---
+
+## 🔐 Environment Variables
+
+The backend loads settings from `backend/.env`. Below are the supported configuration options:
+
+| Variable | Description | Required | Default |
+|---|---|---|---|
+| `GROQ_API_KEY` | API key from the [Groq Console](https://console.groq.com) | ✅ Yes | `your_groq_api_key_here` |
+| `CHROMA_DB_PATH` | Path to store the vector database files | ❌ No | `./chroma_db` |
+| `DATABASE_URL` | PostgreSQL connection string (falls back to local SQLite) | ❌ No | `postgresql://...` |
+| `REDIS_URL` | Redis broker URI for Celery queues | ❌ No | `redis://localhost:6379/0` |
+
+---
+
 ## 📁 Project Structure & Code Mapping
 
 All features are implemented inside this unified repository structure:
