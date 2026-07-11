@@ -1,0 +1,29 @@
+# Python files
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+backend/venv/
+.pytest_cache/
+
+# Node files
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+
+# Local databases and vector stores
+*.db
+backend/chroma_db/
+backend/temp_uploads/
+chroma_db/
+temp_uploads/
+
+# Environment configurations and secret keys
+.env
+backend/.env
+frontend/.env
+
+# Operating system files
+.DS_Store
+Thumbs.db
