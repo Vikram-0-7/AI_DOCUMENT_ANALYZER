@@ -79,7 +79,7 @@ const INITIAL_CHATS = [
           { name: 'Query Parsing & Intent Routing', desc: 'Classified query as financial analytic. Router selected Doc-1 (Financial Report).' },
           { name: 'Hybrid Retrieval (Dense + Sparse)', desc: 'ChromaDB vector lookup (score: 0.88) + BM25 keyword query for "revenue growth, Q2 2026" (score: 1.45).' },
           { name: 'Reciprocal Rank Fusion (RRF)', desc: 'Fused lists. Top chunk: Financial_Report_Q2_2026.pdf [Page 1] ranked #1.' },
-          { name: 'Cross-Encoder Reranking', desc: 'Reranked top 10 chunks. Relevance score of top chunk elevated to 0.94.' },
+          { name: 'Lightweight Token-Overlap Reranking', desc: ' Candidate chunks are re-ordered using query-attention keyword metrics to narrow down the top 3 context passages.' },
           { name: 'Llama 3.1 Generation', desc: 'Prompt constructed with context. Streaming output response containing citations.' }
         ]
       }
