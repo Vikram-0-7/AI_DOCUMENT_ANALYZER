@@ -586,7 +586,7 @@
   color: white;
 }
 
-/* LangGraph Execution Steps logs in chat */
+/* LangChain Execution Steps logs in chat */
 .agent-execution-trace {
   margin-top: 10px;
   border: 1px solid var(--border-color);

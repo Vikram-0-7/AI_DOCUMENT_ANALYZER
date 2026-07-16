@@ -50,7 +50,7 @@ class ChatMessage(Base):
     sender = Column(String, nullable=False) # 'user' or 'ai'
     text = Column(String, nullable=False)
     citations = Column(JSON, nullable=True) # list of dict: docName, page, text
-    steps = Column(JSON, nullable=True) # LangGraph agent trace steps
+    steps = Column(JSON, nullable=True) # LangChain pipeline trace steps
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     
     session = relationship("ChatSession", back_populates="messages")

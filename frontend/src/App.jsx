@@ -1237,7 +1237,7 @@ function App() {
                             >
                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <GitBranch size={12} style={{ color: 'var(--accent-primary)' }} />
-                                <span>LangGraph Trace Pipeline Logs</span>
+                                <span>LangChain Trace Pipeline Logs</span>
                               </div>
                               {expandedTraceIndex === idx ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                             </div>

@@ -5,7 +5,7 @@ This document details how each resume bullet point is technically implemented in
 ---
 
 ## 🏛️ Bullet Point 1: Platform Architecture & Stack
-> *"Developed a production-grade Multi-Agent Document Intelligence platform using FastAPI, React, LangGraph, ChromaDB, and PostgreSQL, enabling semantic search, multi-document question answering, and citation-aware AI interactions across uploaded documents."*
+> *"Developed a production-grade Multi-Agent Document Intelligence platform using FastAPI, React, LangChain, ChromaDB, and PostgreSQL, enabling semantic search, multi-document question answering, and citation-aware AI interactions across uploaded documents."*
 
 ### 1. FastAPI Backend
 *   **Implementation File**: [backend/main.py](file:///d:/projects_2/Project_v/backend/main.py)
@@ -15,13 +15,12 @@ This document details how each resume bullet point is technically implemented in
 *   **Implementation File**: [frontend/src/App.jsx](file:///d:/projects_2/Project_v/frontend/src/App.jsx)
 *   **Details**: Built as a responsive dashboard SPA. It uses React state hooks (`useState`, `useEffect`) to manage document lists, active chat sessions, and study templates. Connects to backend APIs via fetch HTTP requests and processes real-time token streams using a `ReadableStream` reader.
 
-### 3. LangGraph Multi-Agent Workflows
+### 3. LangChain LCEL Pipeline Orchestration
 *   **Implementation File**: [backend/rag_engine.py](file:///d:/projects_2/Project_v/backend/rag_engine.py)
-*   **Details**: Utilizes `langgraph.graph.StateGraph` to define a structured workflow using a state machine:
-    1.  **Retrieve Node (`retrieve_node`)**: Fetches candidates from vector and keyword indices.
-    2.  **RRF Node (`rrf_node`)**: Blends rankings.
-    3.  **Rerank Node (`rerank_node`)**: Re-scores contexts.
-    4.  **End Node**: Exits the state machine and returns context to the generator.
+*   **Details**: Utilizes `langchain_core.runnables.RunnableLambda` to build an LCEL (LangChain Expression Language) `RunnableSequence` pipeline that chains three processing steps:
+    1.  **Retrieve Step (`retrieve_step`)**: Wraps `retrieve_node` — fetches candidates from vector and keyword indices.
+    2.  **RRF Step (`rrf_step`)**: Wraps `rrf_node` — blends dense and sparse rankings via Reciprocal Rank Fusion.
+    3.  **Rerank Step (`rerank_step`)**: Wraps `rerank_node` — re-scores and sorts contexts by token-proximity overlap.
 
 ### 4. ChromaDB Vector Database
 *   **Implementation Files**: [backend/rag_engine.py](file:///d:/projects_2/Project_v/backend/rag_engine.py) & [backend/celery_worker.py](file:///d:/projects_2/Project_v/backend/celery_worker.py)

@@ -1,33 +1,43 @@
 # 🏛️ DOCMIND AI | Document Intelligence Platform
 
-An enterprise-grade, multi-agent platform that **ingests, indexes, analyzes, and queries** complex multi-document structures. Powered by FastAPI, React, LangGraph, ChromaDB, and Groq Llama 3.3, it combines dense vector semantics with sparse keyword search in a Hybrid RAG pipeline to deliver source-verified answers with page-level citations, summaries, quizzes, and comparison panels in seconds.
+An enterprise-grade Document Intelligence platform powered by a Hybrid RAG pipeline that **ingests, indexes, analyzes, and queries** complex multi-document structures. Powered by FastAPI, React, LangChain, ChromaDB, and Groq Llama 3.3, it combines dense vector semantics with sparse keyword search in a Hybrid RAG pipeline to deliver source-verified answers with page-level citations, summaries, quizzes, and comparison panels in seconds.
 
 ---
 
 ## 📸 Screenshots & Visual Sandbox
 
+
 ### 🏠 System Dashboard & Ingest
-*Upload documents (PDF, DOCX, TXT) to trigger Celery/Background task parsing and ChromaDB vector indexing.*
+<!--*Upload documents (PDF, DOCX, TXT) to trigger Celery/Background task parsing and ChromaDB vector indexing.*-->
+<p align="center">
+  <img src="./Web_Photos/DashBoard.png" alt="Home Page" width="900"/>
+</p>
 
 ### 💬 Multi-Document Chat
-*Interactive chat workspace with context toggles, real-time streaming, and clickable source citations opening a details drawer.*
+<!--*Interactive chat workspace with context toggles, real-time streaming, and clickable source citations opening a details drawer.*-->
+<p align="center">
+  <img src="./Web_Photos/ChatInterface.png" alt="Home Page" width="900"/>
+</p>
 
 ### 📊 RAG Retrieval Analyzer
-*Inspect query vectorization, dense distances, BM25 keyword frequencies, RRF rank fusion, and Cross-Encoder reranking.*
+<!--*Inspect query vectorization, dense distances, BM25 keyword frequencies, RRF rank fusion, and Lightweight Token-Overlap Reranking.*-->
+<p align="center">
+  <img src="./Web_Photos/RagRetrieval.png" alt="Home Page" width="900"/>
+</p>
 
 ---
 
 ## ✨ Features
 
-| Feature | Technical Description | Status |
-| :--- | :--- | :--- |
-| **🔍 Hybrid RAG** | Merges Dense semantic search (ChromaDB + BGE) and Sparse keyword matching (BM25) | `[x]` **Implemented** |
-| **🤖 LangGraph Flow** | Orchestrates Retrieve $\rightarrow$ RRF Fusion $\rightarrow$ Cross-Encoder Rerank using State Graph workflows | `[x]` **Implemented** |
-| **📊 Visual Sandbox** | Step-by-step trace logger displaying vector distances, ranks, and model relevance | `[x]` **Implemented** |
-| **💬 Multi-Doc Chat** | Citation-aware chat interface with active workspace document checkboxes and memory | `[x]` **Implemented** |
-| **⚖️ Compare Panel** | Side-by-side contrast analysis to isolate differences, similarities, and contradictions | `[x]` **Implemented** |
-| **📖 Doc Text Viewer** | Built-in scrollable reading view with page division, copy options, and real-time word search | `[x]` **Implemented** |
-| **🎓 Study Hub** | Automatic generation of executive outlines, flashcard decks, and self-graded quizzes | `[x]` **Implemented** |
+| Feature | Technical Description |
+| :--- | :--- |
+| **🔍 Hybrid RAG** | Merges Dense semantic search (ChromaDB + BGE) and Sparse keyword matching (BM25) |
+| **🤖 LangChain Flow** | Orchestrates Retrieve → RRF Fusion → Lightweight Token-Overlap Reranking using LCEL RunnableSequence workflows |
+| **📊 Visual Sandbox** | Step-by-step trace logger displaying vector distances, ranks, and model relevance |
+| **💬 Multi-Doc Chat** | Citation-aware chat interface with active workspace document checkboxes and memory |
+| **⚖️ Compare Panel** | Side-by-side contrast analysis to isolate differences, similarities, and contradictions |
+| **📖 Doc Text Viewer** | Built-in scrollable reading view with page division, copy options, and real-time word search |
+| **🎓 Study Hub** | Automatic generation of executive outlines, flashcard decks, and self-graded quizzes |
 
 ---
 
@@ -40,7 +50,7 @@ graph TD
     B -->|Async Workers| D[Celery + Redis / BackgroundTasks]
     D -->|Text Extraction| E[PDF/Word/Text Files]
     D -->|Index Chunks| F[ChromaDB Vector Store]
-    B -->|Hybrid Query RAG| G[LangGraph State Workflow]
+    B -->|Hybrid Query RAG| G[LangChain LCEL Pipeline]
     G -->|Dense Similarity| F
     G -->|RRF & Rerank| H[Reranking Metrics]
     H -->|Secure HTTPS Context| I[Groq Llama 3.3 LLM]
@@ -55,7 +65,7 @@ graph TD
 ### How Retrieval & Answer Streaming Works
 1. **Semantic & Keyword Query**: Your question triggers a concurrent dense search (vector distance in ChromaDB) and sparse search (BM25 score over the collection).
 2. **Reciprocal Rank Fusion (RRF)**: Dense and sparse ranks are merged using the RRF algorithm, filtering the top 8 candidates.
-3. **Cross-Encoder Reranking**: Candidate chunks are re-ordered using query-attention keyword metrics to narrow down the top 3 context passages.
+3. **Lightweight Token-Overlap Reranking**: Candidate chunks are re-ordered using query-attention keyword metrics to narrow down the top 3 context passages.
 4. **LLM Generation**: The top 3 chunks are embedded in the prompt. The FastAPI server streams the LLM response back to the React UI using Server-Sent Events (SSE).
 
 ---
@@ -99,18 +109,6 @@ graph TD
 
 ---
 
-## 🔐 Environment Variables
-
-The backend loads settings from `backend/.env`. Below are the supported configuration options:
-
-| Variable | Description | Required | Default |
-|---|---|---|---|
-| `GROQ_API_KEY` | API key from the [Groq Console](https://console.groq.com) | ✅ Yes | `your_groq_api_key_here` |
-| `CHROMA_DB_PATH` | Path to store the vector database files | ❌ No | `./chroma_db` |
-| `DATABASE_URL` | PostgreSQL connection string (falls back to local SQLite) | ❌ No | `postgresql://...` |
-| `REDIS_URL` | Redis broker URI for Celery queues | ❌ No | `redis://localhost:6379/0` |
-
----
 
 ## 📁 Project Structure & Code Mapping
 
@@ -120,7 +118,7 @@ All features are implemented inside this unified repository structure:
 Project_v/
 ├── backend/
 │   ├── main.py            # FastAPI entrypoint, REST API endpoints, SSE streams (File viewer, Delete, Chat, Compare, Study APIs)
-│   ├── rag_engine.py      # LangGraph workflows, RRF, Cross-Encoder reranking, Groq LLM connectors, fallback generators
+│   ├── rag_engine.py      # LangChain LCEL workflows, RRF, Lightweight Token-Overlap Reranking, Groq LLM connectors, fallback generators
 │   ├── celery_worker.py   # PDF/DOCX/TXT parsing, Parent-Child chunking, BGE-base-en-v1.5 embedding generation, ChromaDB indexing
 │   ├── database.py        # SQLite/PostgreSQL schemas, engine session builders (ChatSession, ChatMessage, DocumentMetadata)
 │   ├── config.py          # Settings, environmental loading, file path configuration
@@ -174,3 +172,18 @@ Project_v/
    npm run dev
    ```
 3. Open the output port (default: [http://localhost:5173/](http://localhost:5173/)) in your web browser!
+
+---
+
+## 🔐 Environment Variables
+
+The backend loads settings from `backend/.env`. Below are the supported configuration options:
+
+| Variable | Description | Default |
+|---|---|---|
+| `GROQ_API_KEY` | API key from the [Groq Console](https://console.groq.com)  | `your_groq_api_key_here` |
+| `CHROMA_DB_PATH` | Path to store the vector database files  | `./chroma_db` |
+| `DATABASE_URL` | PostgreSQL connection string (falls back to local SQLite)  | `postgresql://...` |
+| `REDIS_URL` | Redis broker URI for Celery queues  | `redis://localhost:6379/0` |
+
+---

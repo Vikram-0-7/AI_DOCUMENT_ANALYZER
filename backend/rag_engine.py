@@ -7,7 +7,7 @@ import logging
 from typing import List, Dict, Any, TypedDict, Annotated
 import chromadb
 from rank_bm25 import BM25Okapi
-from langgraph.graph import StateGraph, END
+from langchain_core.runnables import RunnableLambda
 from groq import Groq
 
 from backend.config import settings
@@ -35,7 +35,7 @@ def tokenize(text: str) -> List[str]:
     return text.lower().split()
 
 # ==========================================
-# MULTI-AGENT LANGGRAPH FLOW
+# LANGCHAIN LCEL HYBRID RAG PIPELINE
 # ==========================================
 
 def retrieve_node(state: RagState) -> Dict[str, Any]:
@@ -243,20 +243,26 @@ def rerank_node(state: RagState) -> Dict[str, Any]:
         "trace_logs": logs
     }
 
-# Build LangGraph workflow State Machine
-workflow = StateGraph(RagState)
-workflow.add_node("retrieve", retrieve_node)
-workflow.add_node("rrf", rrf_node)
-workflow.add_node("rerank", rerank_node)
+# ==========================================
+# BUILD LANGCHAIN LCEL RUNNABLE PIPELINE
+# ==========================================
+# Each step function merges the node's partial output back into the
+# full state dict, replicating the auto-merge behaviour of LangGraph.
 
-# Set workflow path
-workflow.set_entry_point("retrieve")
-workflow.add_edge("retrieve", "rrf")
-workflow.add_edge("rrf", "rerank")
-workflow.add_edge("rerank", END)
+def retrieve_step(state: Dict[str, Any]) -> Dict[str, Any]:
+    return {**state, **retrieve_node(state)}
 
-# Compile graph
-rag_agent_graph = workflow.compile()
+def rrf_step(state: Dict[str, Any]) -> Dict[str, Any]:
+    return {**state, **rrf_node(state)}
+
+def rerank_step(state: Dict[str, Any]) -> Dict[str, Any]:
+    return {**state, **rerank_node(state)}
+
+rag_chain = (
+    RunnableLambda(retrieve_step)
+    | RunnableLambda(rrf_step)
+    | RunnableLambda(rerank_step)
+)
 
 # ==========================================
 # STREAMING SYNTHESIZER ENGINE
@@ -277,13 +283,13 @@ def run_rag_pipeline(query: str, doc_ids: List[str]) -> Dict[str, Any]:
         "citations": [],
         "trace_logs": []
     }
-    return rag_agent_graph.invoke(initial_state)
+    return rag_chain.invoke(initial_state)
 
 def stream_llama_response(query: str, doc_ids: List[str]):
     """
     Generator yielding parts of the answer with citations and trace steps.
     """
-    # 1. Run retrieval through LangGraph state machine
+    # 1. Run retrieval through LangChain LCEL pipeline
     state = run_rag_pipeline(query, doc_ids)
     context_chunks = state["reranked_results"][:3] # Pick top 3 chunks
     trace_logs = state["trace_logs"]
