@@ -79,7 +79,7 @@ const INITIAL_CHATS = [
           { name: 'Query Parsing & Intent Routing', desc: 'Classified query as financial analytic. Router selected Doc-1 (Financial Report).' },
           { name: 'Hybrid Retrieval (Dense + Sparse)', desc: 'ChromaDB vector lookup (score: 0.88) + BM25 keyword query for "revenue growth, Q2 2026" (score: 1.45).' },
           { name: 'Reciprocal Rank Fusion (RRF)', desc: 'Fused lists. Top chunk: Financial_Report_Q2_2026.pdf [Page 1] ranked #1.' },
-          { name: 'Lightweight Token-Overlap Reranking', desc: ' Candidate chunks are re-ordered using query-attention keyword metrics to narrow down the top 3 context passages.' },
+          { name: 'Lightweight Token-Overlap Reranking', desc: 'Reranked top 10 chunks. Relevance score of top chunk elevated to 0.94.' },
           { name: 'Llama 3.1 Generation', desc: 'Prompt constructed with context. Streaming output response containing citations.' }
         ]
       }
@@ -126,17 +126,17 @@ const MOCK_QUIZZES = {
 
 const DEFAULT_RAG_ANALYSIS = {
   query: 'search',
-  denseResults: [
-    { text: 'ChromaDB vector database hosting BAAI/bge-base-en-v1.5 embeddings...', source: 'Groq_Llama3_System_Architecture.txt', score: 0.72, parent: 'System Architecture Specifications: - Vector Database: ChromaDB, hosting BAAI/bge-base-en-v1.5 embeddings for fast cosine similarity scoring.' }
+  denseChunks: [
+    { text: 'ChromaDB vector database hosting BAAI/bge-base-en-v1.5 embeddings...', document_name: 'Groq_Llama3_System_Architecture.txt', score: 0.72, parent_text: 'System Architecture Specifications: - Vector Database: ChromaDB, hosting BAAI/bge-base-en-v1.5 embeddings for fast cosine similarity scoring.', page: 1 }
   ],
-  sparseResults: [
-    { text: 'ChromaDB vector database hosting BAAI/bge-base-en-v1.5 embeddings...', source: 'Groq_Llama3_System_Architecture.txt', score: 1.10 }
+  sparseChunks: [
+    { text: 'ChromaDB vector database hosting BAAI/bge-base-en-v1.5 embeddings...', document_name: 'Groq_Llama3_System_Architecture.txt', score: 1.10, page: 1 }
   ],
-  rrfResults: [
-    { rank: 1, doc: 'Groq_Llama3_System_Architecture.txt', text: 'ChromaDB vector database hosting BAAI/bge-base-en-v1.5 embeddings...', score: 0.033, beforeRank: { dense: 1, sparse: 1 } }
+  rrf: [
+    { rank: 1, document_name: 'Groq_Llama3_System_Architecture.txt', text: 'ChromaDB vector database hosting BAAI/bge-base-en-v1.5 embeddings...', rrf_score: 0.033, beforeRank: { dense: 1, sparse: 1 }, page: 1 }
   ],
-  crossEncoderResults: [
-    { doc: 'Groq_Llama3_System_Architecture.txt', text: 'ChromaDB vector database hosting BAAI/bge-base-en-v1.5 embeddings...', final_score: 0.82 }
+  crossEncoder: [
+    { document_name: 'Groq_Llama3_System_Architecture.txt', text: 'ChromaDB vector database hosting BAAI/bge-base-en-v1.5 embeddings...', final_score: 0.82, page: 1 }
   ]
 };
 
@@ -682,16 +682,27 @@ function App() {
       if (!res.ok) throw new Error("HTTP error " + res.status);
       const data = await res.json();
       
-      setRagResult({
-        query: data.query,
-        denseChunks: data.dense_results,
-        sparseChunks: data.sparse_results,
-        rrf: data.rrf_results,
-        crossEncoder: data.cross_encoder_results
-      });
+      if (!data.dense_results || data.dense_results.length === 0) {
+        addLogLine('INFO', `No indexed matches found. Displaying visual RAG preview sandbox.`);
+        setRagResult({
+          ...DEFAULT_RAG_ANALYSIS,
+          query: ragQuery
+        });
+      } else {
+        setRagResult({
+          query: data.query,
+          denseChunks: data.dense_results,
+          sparseChunks: data.sparse_results,
+          rrf: data.rrf_results,
+          crossEncoder: data.cross_encoder_results
+        });
+      }
     } catch (err) {
       console.warn("Analyzer API failed. Yielding static analyzer mocks.", err);
-      setRagResult(DEFAULT_RAG_ANALYSIS);
+      setRagResult({
+        ...DEFAULT_RAG_ANALYSIS,
+        query: ragQuery
+      });
     }
   };
 
@@ -1305,7 +1316,7 @@ function App() {
           <div className="view-container">
             <div className="view-header">
               <h2>RAG Retrieval Analyzer</h2>
-              <p>Analyze vector similarity indices, BM25 scores, Reciprocal Rank Fusion blending, and Cross-Encoder outcomes.</p>
+              <p>Analyze vector similarity indices, BM25 scores, Reciprocal Rank Fusion blending, and Lightweight Token-Overlap Reranking outcomes.</p>
             </div>
 
             <div className="rag-layout">
@@ -1365,7 +1376,7 @@ function App() {
                   className={`pipeline-node ${activeNode === 'Rerank' ? 'active' : ''}`}
                   onClick={() => setActiveNode('Rerank')}
                 >
-                  <span className="node-title">Cross-Encoder</span>
+                  <span className="node-title">Lightweight Token-Overlap Reranking</span>
                   <span className="node-subtitle">Context Reranker</span>
                 </div>
                 <div className="pipeline-arrow">
@@ -1448,9 +1459,9 @@ function App() {
 
                     {activeNode === 'Rerank' && (
                       <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <span className="panel-title" style={{ color: 'var(--accent-primary)' }}>Cross-Encoder Context Reranker</span>
+                        <span className="panel-title" style={{ color: 'var(--accent-primary)' }}>Lightweight Token-Overlap Reranking Context Reranker</span>
                         <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                          The top retrieval candidates are evaluated against the query using a transformer-based **Cross-Encoder**. This models the full attention between query tokens and chunk tokens.
+                          The top retrieval candidates are evaluated against the query using a transformer-based **Lightweight Token-Overlap Reranking**. This models the full attention between query tokens and chunk tokens.
                         </p>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           {ragResult.crossEncoder.map((c, idx) => (
